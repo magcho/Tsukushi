@@ -10,13 +10,14 @@ function init()
     define('WORD_CONVERT_DIC', 'word_convert_dic_table');
     define('WORD_SCORE_DIC', 'word_score_tweet_dic_table');
 };
+
 ?>
-<!doctype html>
+<!doctype hmtl>
 <!--1.入力された文章を変数($text)へ代入する-->
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>感情解析v2</title>
+  <title>感情解析v3</title>
   <style type="text/css">
     div#form{
       float: left;
@@ -42,7 +43,7 @@ function init()
       display: none;
       width:80%;
     }
-    div#credit{
+    div.credit{
       display: block;
       background-color: #d8ffb2;
       padding: 20px;
@@ -60,6 +61,9 @@ function init()
     }
     pre.var-dump{
       margin:0 0 0 2em;
+    }
+    b.result{
+      font-size: 1.5em;
     }
   </style>
   <script type="text/javascript">
@@ -175,7 +179,7 @@ function get_Text()
          echo '</tr></table>';
      }
      getWordConvertDebug();
-     echo 'START = getWrodConvert()';
+     echo 'START = getWordConvert()';
      global $sentence_word;
      $DB_TABLE = WORD_CONVERT_DIC;
      $dbhost = 'mysql:host='.DB_HOST.';dbname='.DB_NAME.';port='.DB_PORT.';charset=utf8';
@@ -186,7 +190,9 @@ function get_Text()
              if ($key == 0) {
                  $search_sql .= "changed='".$word['word']."' ";
              } else {
-                 $search_sql .= "OR changed='".$word['word']."' ";
+                 if (mb_strlen($word['word']) == 2) {
+                     $search_sql .= "OR changed='".$word['word']."' ";
+                 }
              }
          }
          $sql = 'SELECT * FROM '.$DB_TABLE.$search_sql;
@@ -204,14 +210,14 @@ function get_Text()
          }
      }
      getWordConvertDebug();
-     echo 'END getWrodConvert()<br /><br />';
+     echo 'END getWordConvert()<br /><br />';
  } function getDicSql()
  {
      echo 'START = getDicSql()<br />';
      function getDicSpl_word()
      {
          global $sentence_word;
-         $DB_TABLE = 'word_score_tweet_dic_table';
+         $DB_TABLE = WORD_SCORE_DIC;
          $dbhost = 'mysql:host='.DB_HOST.';dbname='.DB_NAME.';port='.DB_PORT.';charset=utf8';
          try {
              $pdo = new PDO($dbhost, DB_USER, DB_PASSWORD);
@@ -233,7 +239,7 @@ function get_Text()
          for ($i = 0, $SENTENCE_WORD_LEN = count($sentence_word) - 1;$i <= $SENTENCE_WORD_LEN;++$i) {
              foreach ($dataBody as $value) {
                  if ($sentence_word[$i]['word'] == $value['word']) {
-                     $sentence_word[$i]['score'] = $value['score'];
+                     $sentence_word[$i]['score'] = (float) $value['score'] + 0.0;
                  }
              }
          }
@@ -249,14 +255,12 @@ function get_Text()
                  if ($value2['flow'] == $key1) {
                      $sum[$key1] += $value2['score'];
                      ++$count[$key1];
-                 } else {
-                     foreach ($count as $key3 => $value3) {
-                         $sentence_flow[$key1]['score'] = $sum[$key3] / $value3;
-                     }
                  }
              }
+             foreach ($count as $key3 => $value3) {
+                 $sentence_flow[$key1]['score'] = $sum[$key3] / $value3;
+             }
          }
-         echo_dump($sentence_flow);
      }
      getDicSpl_word();
      getDicSpl_flow();
@@ -278,7 +282,7 @@ function get_Text()
          }
      }
      echo '>> ROOT NODE ='.$rootNodeNum.'<br />>> ';
-     echo var_dump($sentence_flow[$rootNodeNum]).'<br />END = SearchRootNode';
+     echo var_dump($sentence_flow[$rootNodeNum]).'<br />END = SearchRootNode<br />';
      function searchConectNode($F_CurrentNodeNum)
      {
          global $sentence_flow;
@@ -346,7 +350,7 @@ return $returnArray; break; default: echo 'getNodeFamily関数のオプション
              $j = $sibling[$i];
              $result += $sentence_flow[$j]['score'];
          }
-         echo 'sentence_flow['.$currentNodeNum.']の兄弟は'.$node_size.'個---合計='.$result.'点-';
+         echo '>> sentence_flow['.$currentNodeNum.']の兄弟は'.$node_size.'個 * * 合計='.$result.'点 * ';
          $result = $result / $node_size;
          echo '平均='.$result.'点<br />';
          $motherNodeNum = getNodeFamily($sentence_flow, $currentNodeNum, 1);
@@ -367,18 +371,25 @@ return $returnArray; break; default: echo 'getNodeFamily関数のオプション
      global $sentence_result;
      global $sentence_flow;
      echo '</div><div id="result">';
-     echo '「'.$text.'」の感情スコアは'.$sentence_result.'点です。';
+     echo '<b class="result">「'.$text.'」</b><br />の感情スコアは<b class="result">'.$sentence_result.'点</b>で';
+     if ($sentence_result >= 0) {
+         echo '<b class="result">ポジティブな文章と判断されました。</b>';
+     } else {
+         echo '<b class="result">ネガティブな文章と判断されました。</b>';
+     }
      echo '</div>';
  } function echo_dump($var)
  {
      echo '>>>>>>>>>><pre class="var-dump">';
      echo var_dump($var);
      echo '</pre>>>>>>>>>>><br />';
- } ini_set('display_errors', 1); init(); get_Text(); if ($text != '') {
+ } init(); get_Text(); if ($text != '') {
      getFlow();
      getWord();
      getWordConvert();
      getDicSql();
+     echo_dump($sentence_word);
+     echo_dump($sentence_flow);
      getResultNode();
      score();
      showResult();
@@ -389,16 +400,21 @@ return $returnArray; break; default: echo 'getNodeFamily関数のオプション
  } echo '</div>';?>
 
 <div class="credit">
-    <pre>
-    ＜クレジット＞
-    Hiroya Takamura, Takashi Inui, Manabu Okumura,
-    "Extracting Semantic Orientations of Words using Spin Model",
-    In Proceedings of the 43rd Annual Meeting of the Association for Computational Linguistics (ACL2005) ,
+	<h2>Credit</h2>
+    <p style="margin-left: 15px;float: left;">
+    Hiroya Takamura, Takashi Inui, Manabu Okumura,<br>
+    "Extracting Semantic Orientations of Words using Spin Model",<br>
+    In Proceedings of the 43rd Annual Meeting of the Association for Computational Linguistics (ACL2005) ,<br>
     pages 133--140, 2005.
-    </pre>
+    </p>
     <!-- Begin Yahoo! JAPAN Web Services Attribution Snippet -->
+   	<p style="float: left;>
     <a href="http://developer.yahoo.co.jp/about">
         <img src="http://i.yimg.jp/images/yjdn/yjdn_attbtn1_88_35.gif" width="88" height="35" title="Webサービス by Yahoo! JAPAN" alt="Web Services by Yahoo! JAPAN" border="0" style="margin:15px 15px 15px 15px">
     </a>
+    </p>
     <!-- End Yahoo! JAPAN Web Services Attribution Snippet -->
+    <p style="margin-left: 15px;padding-top: 15px" style="float: left;">
+    	IPAdictionary　IPA情報処理推進機構
+    </p>
 </div>
