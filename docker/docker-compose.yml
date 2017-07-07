@@ -1,0 +1,35 @@
+mysql:
+  image: mysql:5.7
+  volumes:
+    - "./mysql/lib:/var/lib/mysql"
+    - "./mysql/conf.d:/etc/mysql/conf.d"
+    - "./mysql/volume:/home/volume"
+    #- "./mysql/import:/home/mysql"
+
+  environment:
+    - MYSQL_ROOT_PASSWORD=password
+  ports:
+    - "3306:3306"
+
+phpmyadmin:
+  image: phpmyadmin/phpmyadmin
+  environment:
+    - PMA_ARBITRARY=1
+    - PMA_HOST=mysql
+    - PMA_USER=root
+    - PMA_PASSWORD=password
+  links:
+    - mysql
+  ports:
+     - "8080:80"
+  volumes:
+     - ./phpmyadmin:/sessions
+
+php-7.0:
+  build: .
+  ports:
+    - "80:80"
+  volumes:
+    - "../:/var/www/html"
+  links:
+    - mysql
