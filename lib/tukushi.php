@@ -323,5 +323,4 @@ class tukushi{
 
 $hoge = new tukushi();
 $hoge->DB_host = "mysql";
-// $hoge->getscore('昨日寄ったスーパーに、可愛いクッキーが売ってた。');
-echo $hoge->getscore('キャップがみんなに指示出す時に、｢ハルクは…暴れろ。(Hulk,Smash.)｣って言った時の、呼ばれた時にはちょっとイラついてる感じなのに、暴れろって言われた瞬間の任せろって感じのニヤケ方が最高なのよ！！！');
+$hoge->getscore('昨日寄ったスーパーに、可愛いクッキーが売ってた。');
