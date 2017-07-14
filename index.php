@@ -5,7 +5,7 @@ function init()
     define('DB_PORT', '3306');              // SQLのポート番号を指定してください
     define('DB_USER', 'root');              // SQLのユーザ名を入力してください
     define('DB_PASSWORD', 'example');       // SQLのパスワードを入力してください
-    define('DB_NAME', 'kaken28_db');　　     // DB名を入力してください
+    define('DB_NAME', 'kaken28_db');        // DB名を入力してください
     define('APP_ID', 'yahooapisのトークンを入力してください。');   // yahooapiのトークンを入力してください
     define('WORD_CONVERT_DIC', 'word_convert_dic_table');
     define('WORD_SCORE_DIC', 'word_score_tweet_dic_table');
