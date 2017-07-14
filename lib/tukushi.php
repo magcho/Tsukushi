@@ -28,7 +28,7 @@ class tukushi{
   public $DB_word_convert = "word_convert_dic_table";
   public $DB_word_score = "word_score_tweet_dic_table";
  // yahoo apis appid setting
-  public $APPID = "api_key";
+  public $APPID = "";
 
 
 
