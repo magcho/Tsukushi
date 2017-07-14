@@ -28,7 +28,7 @@ class tukushi{
   public $DB_word_convert = "word_convert_dic_table";
   public $DB_word_score = "word_score_tweet_dic_table";
  // yahoo apis appid setting
-  public $APPID = "dj0zaiZpPWxRWUFsSjVBbzM4UCZzPWNvbnN1bWVyc2VjcmV0Jng9M2U-";
+  public $APPID = "api_key";
 
 
 
@@ -320,7 +320,3 @@ class tukushi{
     echo '</pre>';
   }
 }
-
-$hoge = new tukushi();
-$hoge->DB_host = "mysql";
-$hoge->getscore('昨日寄ったスーパーに、可愛いクッキーが売ってた。');
