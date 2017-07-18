@@ -28,9 +28,61 @@ class tukushi{
   public $DB_word_convert = "word_convert_dic_table";
   public $DB_word_score = "word_score_tweet_dic_table";
  // yahoo apis appid setting
-  public $APPID = "api_key";
+  public $APPID = "";
 
 
+
+
+ /**
+     * 最深レイヤーとノードの情報を取得する
+     * @param  [type] $toArray $sentence_flowを渡す引数
+     * @param  [type] $option  1: 最深レイヤーの階層数、2: 一番下のノード番号
+     * @return [type]          [description]
+     */
+    private function getMaxLayer($toArray, $option) {
+        $MAX_Layer = 0;
+        foreach ($toArray as $value) {
+            if ($value['layer'] > $MAX_Layer) {
+                $MAX_Layer = $value['layer'];
+            }
+        }
+        switch ($option) {
+            case 1:
+                return (int)$MAX_Layer;
+            break;
+            case 2:
+                foreach ($toArray as $key => $value) {
+                    if ($value['layer'] == $MAX_Layer) {
+                        return (int)$key;
+                    }
+                }
+            break;
+            default:
+                echo 'getMaxLayer関数にoptionを指定してください。';
+            break;
+        }
+    }
+    private function getNodeFamily($toArray, $currentNode, $option) {
+        switch ($option) {
+            case 1:
+                return $toArray[$currentNode]['to'];
+            break;
+            case 2:
+                $motherNode = $toArray[$currentNode]['to'];
+                $i = 0;
+                foreach ($toArray as $key => $value) {
+                    if ($value['to'] == $motherNode) {
+                        $returnArray[$i] = $key;
+                        ++$i;
+                    }
+                }
+                return $returnArray;
+            break;
+            default:
+                echo 'getNodeFamily関数のオプションを確認してください';
+            break;
+        }
+    }
 
 /**
  * 文章を解析して点数をつけるメソッド
@@ -48,7 +100,12 @@ class tukushi{
    **/
     $text = urlencode($sentence);
     $url = "https://jlp.yahooapis.jp/DAService/V1/parse?appid={$this->APPID}&sentence={$text}";
-    $xml = simplexml_load_file($url);
+    // $xml = simplexml_load_file($url);
+$ch = curl_init(); // 初期化
+curl_setopt( $ch, CURLOPT_URL, $url );
+curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true ); // 出力内容を受け取る設定
+$result = curl_exec( $ch ); // データの取得
+$xml = simplexml_load_string($result);
     $seg = null;
     $chunks = $xml->Result->ChunkList->Chunk;
     foreach ($chunks as $chunk) {
@@ -82,7 +139,12 @@ class tukushi{
     $i = 0;
     $url = "https://jlp.yahooapis.jp/MAService/V1/parse?appid={$this->APPID}&results=ma";
     $url .= '&sentence='.urlencode($sentence);
-    $xml = simplexml_load_file($url);
+    // $xml = simplexml_load_file($url);
+$ch = curl_init(); // 初期化
+curl_setopt( $ch, CURLOPT_URL, $url );
+curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true ); // 出力内容を受け取る設定
+$result = curl_exec( $ch ); // データの取得
+$xml = simplexml_load_string($result);
     foreach ($xml->ma_result->word_list->word as $value) {
       $sentence_word[$i]['word'] = (string) $value->surface;
       $sentence_word[$i]['score'] = 0.0;
@@ -118,7 +180,7 @@ class tukushi{
         $queryword .= $k['word']."','";
     }
     $queryword = substr($queryword,0,-2);//後ろから3文字つまり’,’を消す
-    $query = "SELECT * FROM `word_convert_dic_table` WHERE `changed` IN({$queryword})";
+    $query = "SELECT * FROM `{$this->DB_word_convert}` WHERE `changed` IN({$queryword})";
 
     // クエリ発行
     $stmt = $dbh->query($query);
@@ -143,8 +205,7 @@ class tukushi{
        $queryword .= $k['word']."','";
     }
     $queryword = substr($queryword,0,-2);//後ろから3文字つまり’,’を消す
-    $query = "SELECT * FROM `word_score_dic_table` WHERE `word` IN({$queryword})";
-
+    $query = "SELECT * FROM `{$this->DB_word_score}` WHERE `word` IN({$queryword})";
     // クエリ発行
     $stmt = $dbh->query($query);
 
@@ -228,61 +289,12 @@ class tukushi{
 
 
 
-    /**
-     * 最深レイヤーとノードの情報を取得する
-     * @param  [type] $toArray $sentence_flowを渡す引数
-     * @param  [type] $option  1: 最深レイヤーの階層数、2: 一番下のノード番号
-     * @return [type]          [description]
-     */
-    function getMaxLayer($toArray, $option) {
-        $MAX_Layer = 0;
-        foreach ($toArray as $value) {
-            if ($value['layer'] > $MAX_Layer) {
-                $MAX_Layer = $value['layer'];
-            }
-        }
-        switch ($option) {
-            case 1:
-                return (int)$MAX_Layer;
-            break;
-            case 2:
-                foreach ($toArray as $key => $value) {
-                    if ($value['layer'] == $MAX_Layer) {
-                        return (int)$key;
-                    }
-                }
-            break;
-            default:
-                echo 'getMaxLayer関数にoptionを指定してください。';
-            break;
-        }
-    }
-    function getNodeFamily($toArray, $currentNode, $option) {
-        switch ($option) {
-            case 1:
-                return $toArray[$currentNode]['to'];
-            break;
-            case 2:
-                $motherNode = $toArray[$currentNode]['to'];
-                $i = 0;
-                foreach ($toArray as $key => $value) {
-                    if ($value['to'] == $motherNode) {
-                        $returnArray[$i] = $key;
-                        ++$i;
-                    }
-                }
-                return $returnArray;
-            break;
-            default:
-                echo 'getNodeFamily関数のオプションを確認してください';
-            break;
-        }
-    }
+   
 
-    $currentNodeNum = getMaxLayer($sentence_flow, 2);
+    $currentNodeNum = $this->getMaxLayer($sentence_flow, 2);
     $flag = false;
     while (!$flag) {
-        $sibling = getNodeFamily($sentence_flow, $currentNodeNum, 2);
+        $sibling = $this->getNodeFamily($sentence_flow, $currentNodeNum, 2);
         $result = 0;
         for ($node_size = count($sibling), $i = 0;$i < $node_size;++$i) {
             $j = $sibling[$i];
@@ -291,13 +303,13 @@ class tukushi{
         // echo '>> sentence_flow[' . $currentNodeNum . ']の兄弟は' . $node_size . '個 * * 合計=' . $result . '点 * ';
         $result = $result / $node_size;
         // echo '平均=' . $result . '点<br />';
-        $motherNodeNum = getNodeFamily($sentence_flow, $currentNodeNum, 1);
+        $motherNodeNum = $this->getNodeFamily($sentence_flow, $currentNodeNum, 1);
         $sentence_flow[$motherNodeNum]['score'] = ($sentence_flow[$motherNodeNum]['score'] + $result) / 2;
         for ($node_size = count($sibling), $i = 0;$i < $node_size;++$i) {
             $j = $sibling[$i];
             $sentence_flow[$j]['layer'] = 0;
         }
-        $currentNodeNum = getMaxLayer($sentence_flow, 2);
+        $currentNodeNum = $this->getMaxLayer($sentence_flow, 2);
         if ($currentNodeNum == $rootNodeNum) {
             $flag = true;
             $sentence_result = $sentence_flow[$rootNodeNum]['score'];
