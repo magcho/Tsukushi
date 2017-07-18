@@ -3,7 +3,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>感情解析v3</title>
+  <title>感情解析v4</title>
   <style type="text/css">
     div#form{
       float: left;
@@ -73,18 +73,30 @@
     </form>
   </div>
 <!--~~~~~~送信フォームここまで~~~~~~-->
-<?php
-  include('./lib/tukushi.php');
+<div id="result">
+  <?php
+    include('./lib/tukushi.php');
 
-  $hoge = new tukushi();
-  $hoge->DB_host = "mysql";
-  $hoge->APPID = '';
-  // $hoge->getscore('昨日寄ったスーパーに、可愛いクッキーが売ってた。');
-  if(isset($_POST['hoge'])){
-    echo $hoge->getscore($_POST['hoge']);
-  }
 
-?>
+    if(isset($_POST['hoge'])){
+      echo "「{$_POST['hoge']}」<br>";
+    $hoge = new tukushi();
+      $hoge->DB_host = "mysql";
+      $hoge->DB_user = "root";
+      $hoge->DB_pass = "password";
+      $hoge->APPID = 'dj0zaiZpPWxRWUFsSjVBbzM4UCZzPWNvbnN1bWVyc2VjcmV0Jng9M2U-';
+      $hoge->DB_name = 'kaken';
+      $hoge->DB_word_score = 'word_score_dic_table';
+      $hoge_r = $hoge->getscore($_POST['hoge']);
+      echo "[{$hoge->DB_word_score}]:{$hoge_r}<br>";
+
+      $hoge->DB_word_score = 'word_score_tweet_dic_table';
+      $hoge_r = $hoge->getscore($_POST['hoge']);
+      echo "[{$hoge->DB_word_score}]:{$hoge_r}";
+    }
+
+  ?>
+</div>
 
 <div class="credit">
 	<h2>Credit</h2>
