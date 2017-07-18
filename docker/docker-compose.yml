@@ -1,5 +1,5 @@
 mysql:
-  image: mysql:5.7
+  image: mysql
   volumes:
     - "./mysql/lib:/var/lib/mysql"
     - "./mysql/conf.d:/etc/mysql/conf.d"
