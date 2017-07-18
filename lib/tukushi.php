@@ -22,6 +22,7 @@ class tukushi{
   public $DB_user = "root";
   public $DB_pass = "password";
   public $DB_name = "kaken";
+  public $DB_charset = "utf8mb4"; // 絵文字対応のため明記的に設定utf8mb4
 
 
  //DB dic setting
@@ -99,6 +100,7 @@ class tukushi{
    * @return @var $sentence_flow {array} 解析結果
    **/
     $text = urlencode($sentence);
+    $text = str_replace(["\r","\n"],"", $text);
     $url = "https://jlp.yahooapis.jp/DAService/V1/parse?appid={$this->APPID}&sentence={$text}";
     // $xml = simplexml_load_file($url);
 $ch = curl_init(); // 初期化
@@ -151,7 +153,6 @@ $xml = simplexml_load_string($result);
       ++$i;
     }
 
-
    // 文節に対応する単語に[flow]属性をつける
     $i = 0;
     foreach ($sentence_flow as $key => $value) {
@@ -166,7 +167,7 @@ $xml = simplexml_load_string($result);
 
    // 単語を辞書形に正規化
     // DBコネクション
-    $dsn = "mysql:dbname={$this->DB_name};host={$this->DB_host}";
+    $dsn = "mysql:dbname={$this->DB_name};host={$this->DB_host};charset={$this->DB_charset}";
     try{
       $dbh = new PDO($dsn, $this->DB_user, $this->DB_pass);
     }catch (PDOException $e){
@@ -180,8 +181,8 @@ $xml = simplexml_load_string($result);
         $queryword .= $k['word']."','";
     }
     $queryword = substr($queryword,0,-2);//後ろから3文字つまり’,’を消す
+    $queryword = preg_replace("/\,'\s'\,/",",",$queryword); // クエリの空白を削除
     $query = "SELECT * FROM `{$this->DB_word_convert}` WHERE `changed` IN({$queryword})";
-
     // クエリ発行
     $stmt = $dbh->query($query);
 
@@ -289,7 +290,7 @@ $xml = simplexml_load_string($result);
 
 
 
-   
+
 
     $currentNodeNum = $this->getMaxLayer($sentence_flow, 2);
     $flag = false;
