@@ -31,6 +31,9 @@ class tukushi{
  // yahoo apis appid setting
   public $APPID = "";
 
+ //error message
+  public $error_info = [];
+
 
 
 
@@ -59,7 +62,10 @@ class tukushi{
                 }
             break;
             default:
-                echo 'getMaxLayer関数にoptionを指定してください。';
+              $error_info[] = [
+                'messsge' =>  'getMaxLayer関数の第２引数が不正です',
+                'code' => 'getMaxLayer'
+              ];
             break;
         }
     }
@@ -80,7 +86,10 @@ class tukushi{
                 return $returnArray;
             break;
             default:
-                echo 'getNodeFamily関数のオプションを確認してください';
+            $error_info[] = [
+              'messsge' =>  'getNodeFamily関数の第３引数が不正です',
+              'code' => 'getNodeFamily'
+            ];
             break;
         }
     }
@@ -99,15 +108,89 @@ class tukushi{
    * @param @var $sentence {string}  解析したい文章
    * @return @var $sentence_flow {array} 解析結果
    **/
+
+    if(gettype($sentence) != 'string'){
+      $error_info[] = [
+        'message' => '第一引数がstring型ではありません',
+        'code' => 'getscore'
+      ];
+    }
+    if($this->APPID != 'string'){
+      $error_info[] = [
+        'message' => 'APPIDが指定されていません',
+        'code' => 'getscore'
+      ];
+    }
+
     $text = urlencode($sentence);
     $text = str_replace(["\r","\n"],"", $text);
     $url = "https://jlp.yahooapis.jp/DAService/V1/parse?appid={$this->APPID}&sentence={$text}";
     // $xml = simplexml_load_file($url);
-$ch = curl_init(); // 初期化
-curl_setopt( $ch, CURLOPT_URL, $url );
-curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true ); // 出力内容を受け取る設定
-$result = curl_exec( $ch ); // データの取得
-$xml = simplexml_load_string($result);
+    $ch = curl_init(); // 初期化
+    curl_setopt( $ch, CURLOPT_URL, $url );
+    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true ); // 出力内容を受け取る設定
+    $result = curl_exec( $ch ); // データの取得
+
+
+    if($errno = curl_errno($ch)) { // エラーをチェックし、エラーメッセージを表示します
+        $error_message = curl_strerror($errno);
+        // echo "cURL error ({$errno}):\n {$error_message}";
+    }
+
+    $xml = simplexml_load_string($result);
+    if(isset($xml->Error->Message)){
+      // apiエラー時の処理
+      switch ($errno) {
+        case '400':
+          $error_info[] = [
+            'message' => '400 係り受けapiへのパラメータが不正です。'.$xml->Error->Message,
+            'code' => 'getscore'
+          ];
+          break;
+
+        case '401':
+        $error_info[] = [
+          'message' => '401 係り受けapiへの許可されていないアクセスです。'.$xml->Error->Message,
+          'code' => 'getscore'
+        ];
+        break;
+
+        case '403':
+        $error_info[] = [
+          'message' => '403 係り受けapiの利用可能回数を超えたか、APPIDが無効です。'.$xml->Error->Message,
+          'code' => 'getscore'
+        ];
+        break;
+
+        case '404':
+        $error_info[] = [
+          'message' => '404 係り受けapiのURLが変更されています。'.$xml->Error->Message,
+          'code' => 'getscore'
+        ];
+        break;
+
+        case '500':
+        $error_info[] = [
+          'message' => '500 係り受けapiのInternal Server Error 時間を空けて再実行してください。'.$xml->Error->Message,
+          'code' => 'getscore'
+        ];
+        break;
+
+        case '503':
+        $error_info[] = [
+          'message' => '503 係り受けapiのService unavailable 時間を空けて再実行してください。'.$xml->Error->Message,
+          'code' => 'getscore'
+        ];
+        break;
+
+        default:
+        $error_info[] = [
+          'message' => '不明なステータスコードです。'.$xml->Error->Message,
+          'code' => 'getscore'
+        ];
+      }
+    }
+    curl_close($ch);
     $seg = null;
     $chunks = $xml->Result->ChunkList->Chunk;
     foreach ($chunks as $chunk) {
@@ -142,18 +225,75 @@ $xml = simplexml_load_string($result);
     $url = "https://jlp.yahooapis.jp/MAService/V1/parse?appid={$this->APPID}&results=ma";
     $url .= '&sentence='.urlencode($sentence);
     // $xml = simplexml_load_file($url);
-$ch = curl_init(); // 初期化
-curl_setopt( $ch, CURLOPT_URL, $url );
-curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true ); // 出力内容を受け取る設定
-$result = curl_exec( $ch ); // データの取得
-$xml = simplexml_load_string($result);
+    $ch = curl_init(); // 初期化
+    curl_setopt( $ch, CURLOPT_URL, $url );
+    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true ); // 出力内容を受け取る設定
+    $result = curl_exec( $ch ); // データの取得
+    $xml = simplexml_load_string($result);
+    if(isset($xml->Error->Message)){
+      // apiエラー時の処理
+      switch ($errno) {
+        case '400':
+          $error_info[] = [
+            'message' => '400 形態素apiへのパラメータが不正です。'.$xml->Error->Message,
+            'code' => 'getscore'
+          ];
+          break;
+
+        case '401':
+        $error_info[] = [
+          'message' => '401 形態素apiへの許可されていないアクセスです。'.$xml->Error->Message,
+          'code' => 'getscore'
+        ];
+        break;
+
+        case '403':
+        $error_info[] = [
+          'message' => '403 形態素apiの利用可能回数を超えたか、APPIDが無効です。'.$xml->Error->Message,
+          'code' => 'getscore'
+        ];
+        break;
+
+        case '404':
+        $error_info[] = [
+          'message' => '404 形態素apiのURLが変更されています。'.$xml->Error->Message,
+          'code' => 'getscore'
+        ];
+        break;
+
+        case '500':
+        $error_info[] = [
+          'message' => '500 形態素apiのInternal Server Error 時間を空けて再実行してください。'.$xml->Error->Message,
+          'code' => 'getscore'
+        ];
+        break;
+
+        case '503':
+        $error_info[] = [
+          'message' => '503 形態素apiのService unavailable 時間を空けて再実行してください。'.$xml->Error->Message,
+          'code' => 'getscore'
+        ];
+        break;
+
+        default:
+        $error_info[] = [
+          'message' => '不明なステータスコードです。'.$xml->Error->Message,
+          'code' => 'getscore'
+        ];
+      }
+    }
+    curl_close($ch);
     foreach ($xml->ma_result->word_list->word as $value) {
       $sentence_word[$i]['word'] = (string) $value->surface;
       $sentence_word[$i]['score'] = 0.0;
       ++$i;
     }
 
-   // 文節に対応する単語に[flow]属性をつける
+    /**
+     * 文節に対応する単語に[flow]属性をつける
+     * @var $sentence_flow {array}
+     * @var $sentence_word {array}
+     */
     $i = 0;
     foreach ($sentence_flow as $key => $value) {
       for ($M = count($sentence_word);$i < $M; ++$i) {
@@ -165,13 +305,19 @@ $xml = simplexml_load_string($result);
       }
     }
 
-   // 単語を辞書形に正規化
+    /**
+     * 単語を辞書形に正規化
+     */
     // DBコネクション
     $dsn = "mysql:dbname={$this->DB_name};host={$this->DB_host};charset={$this->DB_charset}";
     try{
       $dbh = new PDO($dsn, $this->DB_user, $this->DB_pass);
     }catch (PDOException $e){
-      print('Connection failed:'.$e->getMessage());
+      // print('Connection failed:'.$e->getMessage());
+      $error_info[] = [
+        'message' => '単語を辞書形に正規化 Connection failed:'.$e->getMessage(),
+        'code' => 'getscore'
+      ];
       die();
     }
 
