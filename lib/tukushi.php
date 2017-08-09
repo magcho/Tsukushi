@@ -34,7 +34,16 @@ class tukushi{
  //error message
   public $error_info = [];
 
-
+  /**
+   * mysqlのクエリーの特殊文字をエスケープする(mysqlとlike用のエスケープ)
+   * @param  {string} $query クエリー
+   * @return {string}          クエリー
+   */
+  private function escapeQuery($query){
+    // $query = str_replace("\\\\","\\\\\\\\") // ?どうしたもんかねぇ
+    $query = str_replace(["\\","_","'","%"],["\\\\","\\\_","\\'","\\\%"],$query);
+    return $query;
+  }
 
 
  /**
@@ -324,8 +333,10 @@ class tukushi{
     // クエリ生成
     $queryword = "'";// シングルクォーテーション入れる
     foreach($sentence_word as $k){
-        $queryword .= $k['word']."','";
+      $k['word'] = $this->escapeQuery($k['word']);
+      $queryword .= $k['word']."','";
     }
+    echo $queryword.'<br />';
     $queryword = substr($queryword,0,-2);//後ろから3文字つまり’,’を消す
     $queryword = preg_replace("/\,'\s'\,/",",",$queryword); // クエリの空白を削除
     $query = "SELECT * FROM `{$this->DB_word_convert}` WHERE `changed` IN({$queryword})";
@@ -349,12 +360,14 @@ class tukushi{
     // クエリ生成
     $queryword = "'";// シングルクォーテーション入れる
     foreach($sentence_word as $k){
+      $k['word'] = $this->escapeQuery($k['word']);
        $queryword .= $k['word']."','";
     }
     $queryword = substr($queryword,0,-2);//後ろから3文字つまり’,’を消す
     $query = "SELECT * FROM `{$this->DB_word_score}` WHERE `word` IN({$queryword})";
     // クエリ発行
     $stmt = $dbh->query($query);
+    // echo $query;
 
     // DBのレスポンスから$sentence_wordを更新
     while($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
