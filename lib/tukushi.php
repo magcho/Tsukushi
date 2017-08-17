@@ -13,25 +13,24 @@
 /**
  * つくし
  * public @var $DB_host {string} SQLのホスト名
- * public @
- */
+ * public @var $error_info {array} エラー時はfalseが返却され、エラーコードがこの変数に格納される
+*/
 class tukushi{
-
- // DB connection setting
+//default seting
+ // DB connection setting default
   public $DB_host = "localhost";
   public $DB_user = "root";
   public $DB_pass = "password";
   public $DB_name = "kaken";
   public $DB_charset = "utf8mb4"; // 絵文字対応のため明記的に設定utf8mb4
 
-
- //DB dic setting
+ //DB dic setting default
   public $DB_word_convert = "word_convert_dic_table";
   public $DB_word_score = "word_score_tweet_dic_table";
  // yahoo apis appid setting
   public $APPID = "";
 
- //error message
+//error message
   public $error_info = [];
 
   /**
@@ -39,9 +38,9 @@ class tukushi{
    * @param  {string} $query クエリー
    * @return {string}          クエリー
    */
-  private function escapeQuery($query){
+  public function escapeQuery($query){
     // $query = str_replace("\\\\","\\\\\\\\") // ?どうしたもんかねぇ
-    $query = str_replace(["\\","_","'","%"],["\\\\","\\\_","\\'","\\\%"],$query);
+    $query = str_replace(["\\","_","'","%",","],["\\\\","\\\_","\\'","\\\%","\,"],$query);
     return $query;
   }
 
@@ -71,19 +70,35 @@ class tukushi{
                 }
             break;
             default:
-              $error_info[] = [
+              $this->error_info[] = [
                 'messsge' =>  'getMaxLayer関数の第２引数が不正です',
                 'code' => 'getMaxLayer'
               ];
+              return false;
             break;
         }
     }
+    /**
+     *
+     * @param  {array} $toArray    文節の区切り情報を格納した変数($sentence_flow)
+     * @param  {int} $currentNode 検索の基準となるノード番号
+     * @param  {int} $option      1: $currentNodeの親のノード番号を取得
+     *                              @return {int} 親のノード番号
+     *                            2: $currentNodeの兄弟ノード番号を配列で取得
+     *                              @return {array} 兄弟ノード番号を配列返す
+     */
     private function getNodeFamily($toArray, $currentNode, $option) {
         switch ($option) {
             case 1:
+             /**
+              * $currentNodeの親のノード番号を取得
+              */
                 return $toArray[$currentNode]['to'];
             break;
             case 2:
+            /**
+             * $currentNodeの兄弟ノード番号を配列で取得
+             */
                 $motherNode = $toArray[$currentNode]['to'];
                 $i = 0;
                 foreach ($toArray as $key => $value) {
@@ -95,10 +110,11 @@ class tukushi{
                 return $returnArray;
             break;
             default:
-            $error_info[] = [
+            $this->error_info[] = [
               'messsge' =>  'getNodeFamily関数の第３引数が不正です',
               'code' => 'getNodeFamily'
             ];
+            return false;
             break;
         }
     }
@@ -119,16 +135,18 @@ class tukushi{
    **/
 
     if(gettype($sentence) != 'string'){
-      $error_info[] = [
+      $this->error_info[] = [
         'message' => '第一引数がstring型ではありません',
         'code' => 'getscore'
       ];
+      return false;
     }
-    if($this->APPID != 'string'){
-      $error_info[] = [
+    if(!isset($this->APPID)){
+      $this->error_info[] = [
         'message' => 'APPIDが指定されていません',
         'code' => 'getscore'
       ];
+      return false;
     }
 
     $text = urlencode($sentence);
@@ -141,85 +159,87 @@ class tukushi{
     $result = curl_exec( $ch ); // データの取得
 
 
-    if($errno = curl_errno($ch)) { // エラーをチェックし、エラーメッセージを表示します
-        $error_message = curl_strerror($errno);
-        // echo "cURL error ({$errno}):\n {$error_message}";
+    if($result === false) { // エラーをチェックし、エラーメッセージを表示します
+      $this->error_info[] = "curl error:".curl_errno($ch).": ".curl_error($ch);
+      return false;
     }
 
     $xml = simplexml_load_string($result);
     if(isset($xml->Error->Message)){
       // apiエラー時の処理
-      switch ($errno) {
+      switch (curl_errno($ch)) {
         case '400':
-          $error_info[] = [
+          $this->error_info[] = [
             'message' => '400 係り受けapiへのパラメータが不正です。'.$xml->Error->Message,
             'code' => 'getscore'
           ];
           break;
 
         case '401':
-        $error_info[] = [
-          'message' => '401 係り受けapiへの許可されていないアクセスです。'.$xml->Error->Message,
-          'code' => 'getscore'
-        ];
-        break;
+          $this->error_info[] = [
+            'message' => '401 係り受けapiへの許可されていないアクセスです。'.$xml->Error->Message,
+            'code' => 'getscore'
+          ];
+          break;
 
         case '403':
-        $error_info[] = [
-          'message' => '403 係り受けapiの利用可能回数を超えたか、APPIDが無効です。'.$xml->Error->Message,
-          'code' => 'getscore'
-        ];
-        break;
+          $this->error_info[] = [
+            'message' => '403 係り受けapiの利用可能回数を超えたか、APPIDが無効です。'.$xml->Error->Message,
+            'code' => 'getscore'
+          ];
+          break;
 
         case '404':
-        $error_info[] = [
-          'message' => '404 係り受けapiのURLが変更されています。'.$xml->Error->Message,
-          'code' => 'getscore'
-        ];
-        break;
+          $this->error_info[] = [
+            'message' => '404 係り受けapiのURLが変更されています。'.$xml->Error->Message,
+            'code' => 'getscore'
+          ];
+          break;
 
         case '500':
-        $error_info[] = [
-          'message' => '500 係り受けapiのInternal Server Error 時間を空けて再実行してください。'.$xml->Error->Message,
-          'code' => 'getscore'
-        ];
-        break;
+          $error_info[] = [
+            'message' => '500 係り受けapiのInternal Server Error 時間を空けて再実行してください。'.$xml->Error->Message,
+            'code' => 'getscore'
+          ];
+          break;
 
         case '503':
-        $error_info[] = [
-          'message' => '503 係り受けapiのService unavailable 時間を空けて再実行してください。'.$xml->Error->Message,
-          'code' => 'getscore'
-        ];
-        break;
+          $this->error_info[] = [
+            'message' => '503 係り受けapiのService unavailable 時間を空けて再実行してください。'.$xml->Error->Message,
+            'code' => 'getscore'
+          ];
+          break;
 
         default:
-        $error_info[] = [
-          'message' => '不明なステータスコードです。'.$xml->Error->Message,
-          'code' => 'getscore'
-        ];
+          $this->error_info[] = [
+            'message' => '不明なステータスコードです。'.$xml->Error->Message,
+            'code' => 'getscore'
+          ];
+          break;
       }
+      return false;
     }
     curl_close($ch);
     $seg = null;
     $chunks = $xml->Result->ChunkList->Chunk;
     foreach ($chunks as $chunk) {
-        $id = (int) $chunk->Id;
-        $dependency = (int) $chunk->Dependency;
-        $morphems = $chunk->MorphemList->Morphem;
-        foreach ($morphems as $morphem) {
-            $seg = $seg.$morphem->Surface;
-        }
-        $sentence_flow[$id]['to'] = $dependency;
-        $str[$id][$dependency] = $seg;
-        $seg = '';
+      $id = (int) $chunk->Id;
+      $dependency = (int) $chunk->Dependency;
+      $morphems = $chunk->MorphemList->Morphem;
+      foreach ($morphems as $morphem) {
+          $seg = $seg.$morphem->Surface;
+      }
+      $sentence_flow[$id]['to'] = $dependency;
+      $str[$id][$dependency] = $seg;
+      $seg = '';
     }
     for ($i = 0;$i < count($str);++$i) {
-        $key = array_keys($str[$i]);
-        $sentence_flow[$i]['value'] = $str[$i][$key[0]];
+      $key = array_keys($str[$i]);
+      $sentence_flow[$i]['value'] = $str[$i][$key[0]];
 
-        // 初期化処理
-        $sentence_flow[$i]['score'] = 0.0;
-        $sentence_flow[$i]['layer'] = 0;
+      // 初期化処理
+      $sentence_flow[$i]['score'] = 0.0;
+      $sentence_flow[$i]['layer'] = 0;
     }
 
 
@@ -238,58 +258,64 @@ class tukushi{
     curl_setopt( $ch, CURLOPT_URL, $url );
     curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true ); // 出力内容を受け取る設定
     $result = curl_exec( $ch ); // データの取得
+    if($result === false) { // エラーをチェックし、エラーメッセージを表示します
+      $this->error_info[] = "curl error:".curl_errno($ch).": ".curl_error($ch);
+      return false;
+    }
     $xml = simplexml_load_string($result);
     if(isset($xml->Error->Message)){
       // apiエラー時の処理
-      switch ($errno) {
+      switch (curl_errno($ch)) {
         case '400':
-          $error_info[] = [
+          $this->error_info[] = [
             'message' => '400 形態素apiへのパラメータが不正です。'.$xml->Error->Message,
             'code' => 'getscore'
           ];
           break;
 
         case '401':
-        $error_info[] = [
-          'message' => '401 形態素apiへの許可されていないアクセスです。'.$xml->Error->Message,
-          'code' => 'getscore'
-        ];
-        break;
+          $this->error_info[] = [
+            'message' => '401 形態素apiへの許可されていないアクセスです。'.$xml->Error->Message,
+            'code' => 'getscore'
+          ];
+          break;
 
         case '403':
-        $error_info[] = [
-          'message' => '403 形態素apiの利用可能回数を超えたか、APPIDが無効です。'.$xml->Error->Message,
-          'code' => 'getscore'
-        ];
-        break;
+          $this->error_info[] = [
+            'message' => '403 形態素apiの利用可能回数を超えたか、APPIDが無効です。'.$xml->Error->Message,
+            'code' => 'getscore'
+          ];
+          break;
 
         case '404':
-        $error_info[] = [
-          'message' => '404 形態素apiのURLが変更されています。'.$xml->Error->Message,
-          'code' => 'getscore'
-        ];
-        break;
+          $this->error_info[] = [
+            'message' => '404 形態素apiのURLが変更されています。'.$xml->Error->Message,
+            'code' => 'getscore'
+          ];
+          break;
 
         case '500':
-        $error_info[] = [
-          'message' => '500 形態素apiのInternal Server Error 時間を空けて再実行してください。'.$xml->Error->Message,
-          'code' => 'getscore'
-        ];
-        break;
+          $this->error_info[] = [
+            'message' => '500 形態素apiのInternal Server Error 時間を空けて再実行してください。'.$xml->Error->Message,
+            'code' => 'getscore'
+          ];
+          break;
 
         case '503':
-        $error_info[] = [
-          'message' => '503 形態素apiのService unavailable 時間を空けて再実行してください。'.$xml->Error->Message,
-          'code' => 'getscore'
-        ];
-        break;
+          $this->error_info[] = [
+            'message' => '503 形態素apiのService unavailable 時間を空けて再実行してください。'.$xml->Error->Message,
+            'code' => 'getscore'
+          ];
+          break;
 
         default:
-        $error_info[] = [
-          'message' => '不明なステータスコードです。'.$xml->Error->Message,
-          'code' => 'getscore'
-        ];
+          $this->error_info[] = [
+            'message' => '不明なステータスコードです。'.$xml->Error->Message,
+            'code' => 'getscore'
+          ];
+          break;
       }
+      return false;
     }
     curl_close($ch);
     foreach ($xml->ma_result->word_list->word as $value) {
@@ -323,11 +349,11 @@ class tukushi{
       $dbh = new PDO($dsn, $this->DB_user, $this->DB_pass);
     }catch (PDOException $e){
       // print('Connection failed:'.$e->getMessage());
-      $error_info[] = [
+      $this->error_info[] = [
         'message' => '単語を辞書形に正規化 Connection failed:'.$e->getMessage(),
         'code' => 'getscore'
       ];
-      die();
+      return false;
     }
 
     // クエリ生成
@@ -336,7 +362,6 @@ class tukushi{
       $k['word'] = $this->escapeQuery($k['word']);
       $queryword .= $k['word']."','";
     }
-    echo $queryword.'<br />';
     $queryword = substr($queryword,0,-2);//後ろから3文字つまり’,’を消す
     $queryword = preg_replace("/\,'\s'\,/",",",$queryword); // クエリの空白を削除
     $query = "SELECT * FROM `{$this->DB_word_convert}` WHERE `changed` IN({$queryword})";
@@ -430,7 +455,6 @@ class tukushi{
           if($key !== 0){
             $nextCue[] = $key;
           }
-          // echo $key.'&';
         }
       }
       if(count($cue) == 0){
@@ -454,26 +478,26 @@ class tukushi{
     $currentNodeNum = $this->getMaxLayer($sentence_flow, 2);
     $flag = false;
     while (!$flag) {
-        $sibling = $this->getNodeFamily($sentence_flow, $currentNodeNum, 2);
-        $result = 0;
-        for ($node_size = count($sibling), $i = 0;$i < $node_size;++$i) {
-            $j = $sibling[$i];
-            $result+= $sentence_flow[$j]['score'];
-        }
-        // echo '>> sentence_flow[' . $currentNodeNum . ']の兄弟は' . $node_size . '個 * * 合計=' . $result . '点 * ';
-        $result = $result / $node_size;
-        // echo '平均=' . $result . '点<br />';
-        $motherNodeNum = $this->getNodeFamily($sentence_flow, $currentNodeNum, 1);
-        $sentence_flow[$motherNodeNum]['score'] = ($sentence_flow[$motherNodeNum]['score'] + $result) / 2;
-        for ($node_size = count($sibling), $i = 0;$i < $node_size;++$i) {
-            $j = $sibling[$i];
-            $sentence_flow[$j]['layer'] = 0;
-        }
-        $currentNodeNum = $this->getMaxLayer($sentence_flow, 2);
-        if ($currentNodeNum == $rootNodeNum) {
-            $flag = true;
-            $sentence_result = $sentence_flow[$rootNodeNum]['score'];
-        }
+      $sibling = $this->getNodeFamily($sentence_flow, $currentNodeNum, 2);
+      $result = 0;
+      for ($node_size = count($sibling), $i = 0;$i < $node_size;++$i) {
+        $j = $sibling[$i];
+        $result+= $sentence_flow[$j]['score'];
+      }
+      // echo '>> sentence_flow[' . $currentNodeNum . ']の兄弟は' . $node_size . '個 * * 合計=' . $result . '点 * ';
+      $result = $result / $node_size;
+      // echo '平均=' . $result . '点<br />';
+      $motherNodeNum = $this->getNodeFamily($sentence_flow, $currentNodeNum, 1);
+      $sentence_flow[$motherNodeNum]['score'] = ($sentence_flow[$motherNodeNum]['score'] + $result) / 2;
+      for ($node_size = count($sibling), $i = 0;$i < $node_size;++$i) {
+        $j = $sibling[$i];
+        $sentence_flow[$j]['layer'] = 0;
+      }
+      $currentNodeNum = $this->getMaxLayer($sentence_flow, 2);
+      if ($currentNodeNum == $rootNodeNum) {
+        $flag = true;
+        $sentence_result = $sentence_flow[$rootNodeNum]['score'];
+      }
     }
 
 
