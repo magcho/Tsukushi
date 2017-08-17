@@ -52,7 +52,7 @@
       font-size: 1.5em;
     }
   </style>
-  <script type="text/javascript">
+  <!-- <script type="text/javascript">
   function checkdiv( obj,id ) {
     if( obj.checked ){
       document.getElementById("log").style.display = "block";
@@ -61,7 +61,7 @@
       document.getElementById("log").style.display = "none";
     }
   }
-  </script>
+  </script> -->
 </head>
 <!--=====送信フォームここから=====-->
 <body>
@@ -69,18 +69,18 @@
     <form class="a" method="post" action="index.php">
       <input class="input-form" type="text" name="hoge" />
       <input class="input-button" type="submit" />
-      <input type="checkbox" name="example" value="表示" onclick="checkdiv(this,'checkBox')">処理ログの表示
+      <!-- <input type="checkbox" name="example" value="表示" onclick="checkdiv(this,'checkBox')">処理ログの表示 -->
     </form>
   </div>
 <!--~~~~~~送信フォームここまで~~~~~~-->
 <div id="result">
   <?php
-    include('./lib/tukushi.php');
+    include('./lib/Tsukushi.php');
 
 
     if(isset($_POST['hoge'])){
       echo "「{$_POST['hoge']}」<br>";
-    $hoge = new tukushi();
+    $hoge = new Tsukushi();
       $hoge->DB_host = "mysql";
       $hoge->DB_user = "root";
       $hoge->DB_pass = "password";

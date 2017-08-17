@@ -1,6 +1,6 @@
 <?php
 /**
- * Name   :  Tukushi
+ * Name   :  Tsukushi
  * Github :  https://github.com/magcho/Tsukushi
  * Author :  MagCho, https://github.com/magcho
  *        :  uria, https://github.com/uriahome
@@ -15,7 +15,7 @@
  * public @var $DB_host {string} SQLのホスト名
  * public @var $error_info {array} エラー時はfalseが返却され、エラーコードがこの変数に格納される
 */
-class tukushi{
+class Tsukushi{
 //default seting
  // DB connection setting default
   public $DB_host = "localhost";
