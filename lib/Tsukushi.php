@@ -1,4 +1,19 @@
 <?php
+/*
+      Copyright 2017 MagCho, uria
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+ */
 /**
  * Name   :  Tsukushi
  * Github :  https://github.com/magcho/Tsukushi
@@ -27,11 +42,16 @@ class Tsukushi{
  //DB dic setting default
   public $DB_word_convert = "word_convert_dic_table";
   public $DB_word_score = "word_score_tweet_dic_table";
+  public $DB_word_AA_score = "word_score_AA_table";
+  public $DB_word_emoji_score = "word_score_emoji_table";
  // yahoo apis appid setting
   public $APPID = "";
 
 //error message
   public $error_info = [];
+
+  private $emoji_list = [];
+  private $aa_list = [];
 
   /**
    * mysqlのクエリーの特殊文字をエスケープする(mysqlとlike用のエスケープ)
@@ -124,15 +144,7 @@ class Tsukushi{
  * @param $sentence {stirng} 解析したい文章
  * @return          {float}  文章の点数を返却する
  */
-  function getscore($sentence){
-
-
-  /**
-   * yahoo apis で文章から分節間の係り受け関係を取得
-   * @param @var $APPID    {stirng}      yahoo appid
-   * @param @var $sentence {string}  解析したい文章
-   * @return @var $sentence_flow {array} 解析結果
-   **/
+  public function getscore($sentence){
 
     if(gettype($sentence) != 'string'){
       $this->error_info[] = [
@@ -148,6 +160,26 @@ class Tsukushi{
       ];
       return false;
     }
+
+
+  /**
+   * sentenceから絵文字を抽出して削除
+   * sentenceからAAを抽出して削除
+   */
+    require_once(__DIR__."/emoji.php");
+    require_once(__DIR__."/aa.php");
+    $this->emoji_list = extract_emoji($sentence);
+    $this->aa_list = extract_aa($sentence);
+    $sentence = remove_emoji($sentence);
+    $sentence = remove_aa($sentence);
+
+
+  /**
+   * yahoo apis で文章から分節間の係り受け関係を取得
+   * @param @var $APPID    {stirng}      yahoo appid
+   * @param @var $sentence {string}  解析したい文章
+   * @return @var $sentence_flow {array} 解析結果
+   **/
 
     $text = urlencode($sentence);
     $text = str_replace(["\r","\n"],"", $text);
@@ -498,6 +530,51 @@ class Tsukushi{
         $flag = true;
         $sentence_result = $sentence_flow[$rootNodeNum]['score'];
       }
+    }
+
+
+  /**
+   * AAの点数を加味する
+   */
+    // クエリ生成
+    if(count($this->aa_list) != 0){
+      $queryword = "'";// シングルクォーテーション入れる
+      foreach($this->aa_list as $k){
+        $queryword .= $k."','";
+      }
+      $queryword = substr($queryword,0,-2);//後ろから3文字つまり’,’を消す
+      print_r($this->aa_list);
+      $query = "SELECT * FROM `{$this->DB_word_AA_score}` WHERE `aa` IN({$queryword})";
+      echo $query;
+      // クエリ発行
+      $stmt = $dbh->query($query);
+      $sum = $count = 0;
+      while($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
+       $sum += $data['score'];
+       $count++;
+      }
+      $sentence_result = (($sum/$count)+$sentence_result)/2;
+    }
+
+  /**
+   * emojiの点数を加味する
+   */
+    // クエリ生成
+    if(count($this->emoji_list) != 0){
+      $queryword = "'";// シングルクォーテーション入れる
+      foreach($this->emoji_list as $k){
+        $queryword .= $k."','";
+      }
+      $queryword = substr($queryword,0,-2);//後ろから3文字つまり’,’を消す
+      $query = "SELECT * FROM `{$this->DB_word_emoji_score}` WHERE `emoji` IN({$queryword})";
+      // クエリ発行
+      $stmt = $dbh->query($query);
+      $sum = $count = 0;
+      while($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $sum += $data['score'];
+        $count++;
+      }
+      $sentence_result = (($sum/$count)+$sentence_result)/2;
     }
 
 
