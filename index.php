@@ -67,7 +67,7 @@
 <body>
   <div id="form">
     <form class="a" method="post" action="index.php">
-      <input class="input-form" type="text" name="hoge" />
+      <input class="input-form" type="text" name="sentence" />
       <input class="input-button" type="submit" />
       <!-- <input type="checkbox" name="example" value="表示" onclick="checkdiv(this,'checkBox')">処理ログの表示 -->
     </form>
@@ -75,25 +75,29 @@
 <!--~~~~~~送信フォームここまで~~~~~~-->
 <div id="result">
   <?php
+    echo "「{$_POST['sentence']}」<br />";
     include('./lib/Tsukushi.php');
 
+    $hoge = new Tsukushi([
+      'DB_host' => 'mysql',
+      'DB_user' => 'root',
+      'DB_pass' => 'password',
+      'DB_name' => 'kaken',
+      'APPID' => 'dj0zaiZpPWxRWUFsSjVBbzM4UCZzPWNvbnN1bWVyc2VjcmV0Jng9M2U-',
+      'DB_word_score' => 'word_score_dic_table'
+    ]);
+    echo "[{$hoge->DB_word_score}]: ".$hoge->getscore($_POST['sentence'])."<br>";
 
-    if(isset($_POST['hoge'])){
-      echo "「{$_POST['hoge']}」<br>";
-    $hoge = new Tsukushi();
-      $hoge->DB_host = "mysql";
-      $hoge->DB_user = "root";
-      $hoge->DB_pass = "password";
-      $hoge->APPID = 'dj0zaiZpPWxRWUFsSjVBbzM4UCZzPWNvbnN1bWVyc2VjcmV0Jng9M2U-';
-      $hoge->DB_name = 'kaken';
-      $hoge->DB_word_score = 'word_score_dic_table';
-      $hoge_r = $hoge->getscore($_POST['hoge']);
-      echo "[{$hoge->DB_word_score}]:{$hoge_r}<br>";
+    $huga = new Tsukushi([
+      'DB_host' => 'mysql',
+      'DB_user' => 'root',
+      'DB_pass' => 'password',
+      'DB_name' => 'kaken',
+      'APPID' => 'dj0zaiZpPWxRWUFsSjVBbzM4UCZzPWNvbnN1bWVyc2VjcmV0Jng9M2U-',
+      'DB_word_score' => 'word_score_tweet_dic_table'
+    ]);
+    echo "[{$huga->DB_word_score}]: ".$huga->getscore($_POST['sentence'])."<br>";
 
-      $hoge->DB_word_score = 'word_score_tweet_dic_table';
-      $hoge_r = $hoge->getscore($_POST['hoge']);
-      echo "[{$hoge->DB_word_score}]:{$hoge_r}";
-    }
 
   ?>
 </div>
