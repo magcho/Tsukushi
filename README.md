@@ -26,7 +26,7 @@ $hoge = new Tsukushi([
   'DB_user' => 'root',
   'DB_pass' => 'password',
   'DB_name' => 'kaken',
-  'APPID' => 'dj0zaiZpPWxRWUFsSjVBbzM4UCZzPWNvbnN1bWVyc2VjcmV0Jng9M2U-',
+  'APPID' => 'YAHOO　apis　のアプリケーションIDを入力してください',
   'DB_word_score' => 'word_score_dic_table'
 ]);
 ```
@@ -96,7 +96,7 @@ $hoge = new Tsukushi([
   'DB_user' => 'root',
   'DB_pass' => 'password',
   'DB_name' => 'kaken',
-  'APPID' => 'dj0zaiZpPWxRWUFsSjVBbzM4UCZzPWNvbnN1bWVyc2VjcmV0Jng9M2U-',
+  'APPID' => 'YAHOO　apis　のアプリケーションIDを入力してください',
   'DB_word_score' => 'word_score_dic_table'
 ]);
 ```
