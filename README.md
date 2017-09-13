@@ -60,6 +60,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 **また、独自ライセンスとしてこのTsukushiを使用して1万円以上の利益をあげた場合には、なんでもいいのでOSSプロジェクトへ100円以上募金することを決まりとします。**
+
+
 ----
 
 # Tsukushi
