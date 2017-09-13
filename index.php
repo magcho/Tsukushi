@@ -1,3 +1,23 @@
+<!--
+LICENSE: GPL v2
+
+
+Copyright 2017 MagCho, uria
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ -->
 <!doctype hmtl>
 <!--1.入力された文章を変数($text)へ代入する-->
 <html>
@@ -52,7 +72,7 @@
       font-size: 1.5em;
     }
   </style>
-  <script type="text/javascript">
+  <!-- <script type="text/javascript">
   function checkdiv( obj,id ) {
     if( obj.checked ){
       document.getElementById("log").style.display = "block";
@@ -61,39 +81,43 @@
       document.getElementById("log").style.display = "none";
     }
   }
-  </script>
+  </script> -->
 </head>
 <!--=====送信フォームここから=====-->
 <body>
   <div id="form">
     <form class="a" method="post" action="index.php">
-      <input class="input-form" type="text" name="hoge" />
+      <input class="input-form" type="text" name="sentence" />
       <input class="input-button" type="submit" />
-      <input type="checkbox" name="example" value="表示" onclick="checkdiv(this,'checkBox')">処理ログの表示
+      <!-- <input type="checkbox" name="example" value="表示" onclick="checkdiv(this,'checkBox')">処理ログの表示 -->
     </form>
   </div>
 <!--~~~~~~送信フォームここまで~~~~~~-->
 <div id="result">
   <?php
-    include('./lib/tukushi.php');
+    echo "「{$_POST['sentence']}」<br />";
+    include('./lib/Tsukushi.php');
 
+    $hoge = new Tsukushi([
+      'DB_host' => 'mysql',
+      'DB_user' => 'root',
+      'DB_pass' => 'password',
+      'DB_name' => 'kaken',
+      'APPID' => '',
+      'DB_word_score' => 'word_score_dic_table'
+    ]);
+    echo "[{$hoge->DB_word_score}]: ".$hoge->getscore($_POST['sentence'])."<br>";
 
-    if(isset($_POST['hoge'])){
-      echo "「{$_POST['hoge']}」<br>";
-    $hoge = new tukushi();
-      $hoge->DB_host = "mysql";
-      $hoge->DB_user = "root";
-      $hoge->DB_pass = "password";
-      $hoge->APPID = 'dj0zaiZpPWxRWUFsSjVBbzM4UCZzPWNvbnN1bWVyc2VjcmV0Jng9M2U-';
-      $hoge->DB_name = 'kaken';
-      $hoge->DB_word_score = 'word_score_dic_table';
-      $hoge_r = $hoge->getscore($_POST['hoge']);
-      echo "[{$hoge->DB_word_score}]:{$hoge_r}<br>";
+    $huga = new Tsukushi([
+      'DB_host' => 'mysql',
+      'DB_user' => 'root',
+      'DB_pass' => 'password',
+      'DB_name' => 'kaken',
+      'APPID' => '',
+      'DB_word_score' => 'word_score_tweet_dic_table'
+    ]);
+    echo "[{$huga->DB_word_score}]: ".$huga->getscore($_POST['sentence'])."<br>";
 
-      $hoge->DB_word_score = 'word_score_tweet_dic_table';
-      $hoge_r = $hoge->getscore($_POST['hoge']);
-      echo "[{$hoge->DB_word_score}]:{$hoge_r}";
-    }
 
   ?>
 </div>
