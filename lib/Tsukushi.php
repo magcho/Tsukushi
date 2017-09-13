@@ -33,25 +33,48 @@
 class Tsukushi{
 //default seting
  // DB connection setting default
-  public $DB_host = "localhost";
-  public $DB_user = "root";
-  public $DB_pass = "password";
-  public $DB_name = "kaken";
-  public $DB_charset = "utf8mb4"; // 絵文字対応のため明記的に設定utf8mb4
+  public $DB_host;
+  public $DB_user;
+  public $DB_pass;
+  public $DB_name;
+  public $DB_charset;
 
  //DB dic setting default
-  public $DB_word_convert = "word_convert_dic_table";
-  public $DB_word_score = "word_score_tweet_dic_table";
-  public $DB_word_AA_score = "word_score_AA_table";
-  public $DB_word_emoji_score = "word_score_emoji_table";
+  public $DB_word_convert;
+  public $DB_word_score;
+  public $DB_word_AA_score;
+  public $DB_word_emoji_score;
  // yahoo apis appid setting
-  public $APPID = "";
+  public $APPID;
 
 //error message
   public $error_info = [];
 
+// sentence included emoji or ASCII art
   private $emoji_list = [];
   private $aa_list = [];
+
+
+  /**
+   * 初期設定をするコンストラクタ
+   * @param $array コンストラクタへ渡すプロパティー
+   */
+  public function __construct($array){
+    $this->DB_host = isset($array['DB_host']) ? $array['DB_host'] : 'localhost';
+    $this->DB_user = isset($array['DB_user']) ? $array['DB_user'] : 'root';
+    $this->DB_pass = isset($array['DB_pass']) ? $array['DB_pass'] : 'password';
+    $this->DB_name = isset($array['DB_name']) ? $array['DB_name'] : 'kaken';
+    $this->DB_charset = isset($array['DB_charset']) ? $array['DB_charset'] : 'utf8mb4';
+
+
+    $this->DB_word_convert = isset($array['DB_word_convert']) ? $array['DB_word_convert'] : 'word_convert_dic_table';
+    $this->DB_word_score = isset($array['DB_word_score']) ? $array['DB_word_score'] : 'word_score_tweet_dic_table';
+    $this->DB_word_AA_score = isset($array['DB_word_AA_score']) ? $array['DB_word_AA_score'] : 'word_score_AA_table';
+    $this->DB_word_emoji_score = isset($array['DB_word_emoji_score']) ? $array['DB_word_emoji_score'] : 'word_score_emoji_table';
+
+    $this->APPID = isset($array['APPID']) ? $array['APPID'] : '';
+  }
+
 
   /**
    * mysqlのクエリーの特殊文字をエスケープする(mysqlとlike用のエスケープ)
