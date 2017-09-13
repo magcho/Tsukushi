@@ -103,7 +103,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
       'DB_user' => 'root',
       'DB_pass' => 'password',
       'DB_name' => 'kaken',
-      'APPID' => 'dj0zaiZpPWxRWUFsSjVBbzM4UCZzPWNvbnN1bWVyc2VjcmV0Jng9M2U-',
+      'APPID' => '',
       'DB_word_score' => 'word_score_dic_table'
     ]);
     echo "[{$hoge->DB_word_score}]: ".$hoge->getscore($_POST['sentence'])."<br>";
@@ -113,7 +113,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
       'DB_user' => 'root',
       'DB_pass' => 'password',
       'DB_name' => 'kaken',
-      'APPID' => 'dj0zaiZpPWxRWUFsSjVBbzM4UCZzPWNvbnN1bWVyc2VjcmV0Jng9M2U-',
+      'APPID' => '',
       'DB_word_score' => 'word_score_tweet_dic_table'
     ]);
     echo "[{$huga->DB_word_score}]: ".$huga->getscore($_POST['sentence'])."<br>";
