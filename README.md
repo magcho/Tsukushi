@@ -5,6 +5,8 @@
 
 つくしは他の日本語の自然言語解析ソフトウェアの名前になぞらえて3音の食べ物であり、Tsukushiの名前の独自性、作者が寿司が好きだったため名付けられました。
 
+## デモ
+http://magcho.webcrow.jp/tsukushi/
 
 ## 使い方
 
@@ -35,7 +37,7 @@ $hoge = new Tsukushi([
 ```
 echo $hoge->getscore('解析したい文章');
 ```
-    このコードを実行すると「解析したい文章」を採点した数値が表示されます。
+  このコードを実行すると「解析したい文章」を採点した数値が表示されます。
 
 ## ライセンス
 
@@ -69,6 +71,9 @@ Sentnece analysis for Japanese.
 **This library can analysis only Japanese langage.**
 
 
+## DEMO
+http://magcho.webcrow.jp/tsukushi/
+
 
 "Tsukushi" is modeling other natural language analysis software and
 developer likes SUSHI.
@@ -83,13 +88,13 @@ developer likes SUSHI.
   * The dictionaly for word change to score. **word_score_tweet_dic_table.sql.zip** or **word_score_tweet_dic_table.sql.zip**
 
 
-2. include library.
+2. Include library.
 ```
 require_once('./lib/Tsukusi.php');
 ```
 
 
-3. call Tsukushi object and setting.
+3. Call Tsukushi object and setting.
 ```
 $hoge = new Tsukushi([
   'DB_host' => 'mysql',
@@ -101,12 +106,12 @@ $hoge = new Tsukushi([
 ]);
 ```
 
-4. run the method getscore, and return float number that sentence have sentiment analysis score.
+4. Run the method getscore, and return float number that sentence have sentiment analysis score.
 ```
-echo $hoge->getscore('解析したい文章');
+echo $hoge->getscore('For analysis sentence');
 ```
 
-    Show score of 「For analysis sentence」 when This code run.
+  Show score of 「For analysis sentence」 when This code run.
 
 ## license
 
