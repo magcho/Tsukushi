@@ -41,7 +41,7 @@ echo $hoge->getscore('解析したい文章');
 LICENSE: GPL v2
 
 
-Copyright 2017 MagCho, uria
+Copyright 2017- magcho, uria
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -58,7 +58,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-**また、独自ライセンスとしてこのTsukushiを使用して1万円以上の利益をあげた場合には、なんでもいいのでOSSプロジェクトへ100円以上募金することを決まりとします。**
 
 
 ----
@@ -68,8 +67,6 @@ Sentnece analysis for Japanese.
 **This library can analysis only Japanese langage.**
 
 
-## DEMO
-http://magcho.webcrow.jp/tsukushi/
 
 
 "Tsukushi" is modeling other natural language analysis software and
@@ -115,7 +112,7 @@ echo $hoge->getscore('For analysis sentence');
 LICENSE: GPL v2
 
 
-Copyright 2017 MagCho, uria
+Copyright 2017 magcho, uria
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
